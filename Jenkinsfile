@@ -32,7 +32,7 @@ pipeline {
         stage("quality gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonarqube-secret'
+                    waitForQualityGate abortPipeline: true, credentialsId: 'sonarqube-secret'
                 }
             }
         }
