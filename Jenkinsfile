@@ -22,7 +22,8 @@ pipeline {
                 withSonarQubeEnv('sonar-server') {
                     sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
                     -Dsonar.projectKey=Netflix \
-                    -Dsonar.sources=. '''
+                    -Dsonar.sources=. \
+                    -Dsonar.scm.disabled=True'''
                 }
             }
         }
