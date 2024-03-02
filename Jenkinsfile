@@ -13,6 +13,13 @@ pipeline {
                 cleanWs()
             }
         }
+        stage('Folder Check'){
+            steps {
+                sh '''
+                    ls -a
+                '''
+            }
+        }
         stage("Sonarqube Analysis") {
             steps {
                 withSonarQubeEnv('sonar-server') {
