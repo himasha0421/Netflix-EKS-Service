@@ -16,6 +16,7 @@ pipeline {
         stage('Folder Check'){
             steps {
                 sh '''
+                    cd ..
                     ls -a
                 '''
             }
