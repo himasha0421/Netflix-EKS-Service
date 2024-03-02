@@ -11,11 +11,12 @@ pipeline {
         stage('Folder Check'){
             steps {
                 sh '''
-                    cd ..
                     ls -a
                 '''
             }
         }
+
+        // sonarqube static code analysis
         stage("Sonarqube Analysis") {
             steps {
                 withSonarQubeEnv('sonar-server') {
@@ -25,6 +26,8 @@ pipeline {
                 }
             }
         }
+
+        // code quality gate (pass if only quality standards meets)
         stage("quality gate") {
             steps {
                 script {
@@ -32,10 +35,50 @@ pipeline {
                 }
             }
         }
+
+        // install dependancies
         stage('Install Dependencies') {
             steps {
                 sh "npm install"
             }
         }
+        // ------- Security Clearence Stages
+
+        // OWASP dependency checker
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'OWASP-Checker'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        // Trivy File system scanner
+        stage('TRIVY FS SCAN') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+
+        // Docker build and push to docker hub
+        stage("Docker Build & Push"){
+            steps{
+                script{
+                    withCredentials([string( credentialsId: 'tmdb-token', variable: 'TMDB_AUTH_TOKEN' )]) {
+                        withDockerRegistry(credentialsId: 'docker-login', toolName: 'docker'){   
+                            sh "docker build --build-arg TMDB_V3_API_KEY=${TMDB_AUTH_TOKEN} -t netflix ."
+                            sh "docker tag netflix himashaj96/netflix:latest "
+                            sh "docker push himashaj96/netflix:latest "
+                        }
+                    }
+                }
+            }
+        }
+
+        // Image Scan
+        stage("TRIVY"){
+            steps{
+                sh "trivy image himashaj96/netflix:latest > trivyimage.txt" 
+            }
+        }
+
     }
 }
